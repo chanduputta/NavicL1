@@ -2,7 +2,6 @@ import numpy as np
 from fractions import Fraction
 
 # CA code generation API
-# For L1 data r0 
 SV_L1D_r0 = {
     1: '0061727026503255544',
     2: '1660130752435362260',
@@ -71,7 +70,6 @@ SV_L1D_r0 = {
    
 }
 
-#For L1 data r1
 SV_L1D_r1 = {
     1: '0377627103341647600',
     2: '0047555332635133703',
@@ -139,7 +137,6 @@ SV_L1D_r1 = {
    64: '1335441345250455042',
    
 }
-#for L1 data C
 SV_L1D_C = {
     1: '10100',
     2: '10100',
@@ -208,7 +205,6 @@ SV_L1D_C = {
    
 }
 
-#For L1 pilot R0
 SV_L1P_r0 = {
     1: '0227743641272102303',
     2: '0603070242564637717',
@@ -276,8 +272,6 @@ SV_L1P_r0 = {
    64: '0020666576373544533',
    
 }
-
-#For L1 pilot R1
 
 SV_L1P_r1 = {
     1: '1667217344450257245',
@@ -347,8 +341,6 @@ SV_L1P_r1 = {
    
 }
 
-
-#For L1 pilot C
 SV_L1P_C = {
     1: '01000',
     2: '00000',
@@ -416,8 +408,6 @@ SV_L1P_C = {
    64: '01000',
    
 }
-
-#For L1 pilot overlay
 SV_L1PL_r0 = {
     1: '0110111011',
     2: '0111101000',
@@ -630,7 +620,7 @@ def shift(register, feedback, length):
 def genNavicCaCode_d(sv):
     """Build the CA code (PRN) for a given satellite ID
     
-    :param int sv: satellite code (1-64 L1 band)
+    :param int sv: satellite code (1-14 L5 band, 15-28 S band)
     :returns list: ca code for chosen satellite
     
     """
@@ -787,7 +777,7 @@ def genNavicCaTable_pl(samplingFreq):
     indexArr = indexArr.astype(int)
     return np.array([genNavicCaCode_pl(i) for i in range(1,prnIdMax+1)])[:,indexArr].T
 
-class NavicL1sModulator():
+class NavicL5sModulator():
     def __init__(self, fs):
         self.sampleRate = fs
         self.codePhase = 0
@@ -897,7 +887,7 @@ class NavicDataGen():
       return genStream[1:numBitsToGen+1]
     
     def GetBitStream(self):
-       return self.bitStreame
+       return self.bitStream
 
       
 # Channel model API
@@ -994,7 +984,6 @@ def PowerScale(x, SqrtPr):
 def navic_pcps_acquisition(x, prnSeq, fs, fSearch, threshold=0):
 
     """Performs PCPS (Parallel Code Phase Search using FFT algorithm) acquisition
-
     :param x: Input signal buffer
     :param prnSeq: Sampled PRN sequence of satellite being searched
     :param fs: Sampling rate
@@ -1031,7 +1020,6 @@ def navic_pcps_acquisition(x, prnSeq, fs, fSearch, threshold=0):
         return True, tau, fDev
     else:
         return False, 0, 0
-
 #acquisition will provide rough frequency and code offsets. tracking will do precise calculation of frequency shifts and code delays
 #thereby locks the values once threshold is reached
 class NavicTracker:
@@ -1193,6 +1181,7 @@ class NavicTracker:
         # Update the prompt code appropriately
 
         numSamplesPerHalfChip = round(self.pSamplesPerChip/2)
+        self.pPromptCode= self.pPromptCode[:len(iqsig)]
         iq_e = iqsig * np.roll(self.pPromptCode, -1*numSamplesPerHalfChip)
         iq_p = iqsig * self.pPromptCode
         iq_l = iqsig * np.roll(self.pPromptCode, numSamplesPerHalfChip)
